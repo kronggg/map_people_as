@@ -10,7 +10,7 @@ class Config:
     # ======================
     #  Настройки Telegram
     # ======================
-    TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+    TELEGRAM_TOKEN = os.getenv("7750243870:AAE531z6WZ4LpFM_6eE4nmc-Meon57T7B9o")
     
     # ======================
     #  Настройки базы данных
