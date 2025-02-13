@@ -1,71 +1,49 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import (
-    ContextTypes, 
-    ConversationHandler, 
-    CommandHandler, 
-    MessageHandler, 
-    filters,
-    CallbackQueryHandler
-)
+from telegram.ext import ContextTypes, ConversationHandler, MessageHandler, filters, CallbackQueryHandler
 from config import Config
+from database.core import DatabaseManager
 from utils.security import Security
 from utils.geocoder import Geocoder, GeocodingError
-from database.core import DatabaseManager
 import pyotp
 import logging
 
 logger = logging.getLogger(__name__)
 
 class RegistrationHandlers:
-    """Обработчики процесса регистрации пользователя"""
-
     @staticmethod
     async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """
-        Начало процесса регистрации.
-        Показывает GDPR-соглашение и кнопку принятия.
-        """
-        try:
-            await update.message.reply_text(
-                Config.GDPR_TEXT,
-                parse_mode="HTML",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("✅ Я согласен", callback_data="gdpr_accept")]
-                )
-            )
-            return Config.GDPR_CONSENT
-        except Exception as e:
-            logger.error(f"Ошибка в start: {e}")
-            return ConversationHandler.END
+        await update.message.reply_text(
+            Config.GDPR_TEXT,
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([  # Исправлено здесь
+                [InlineKeyboardButton("✅ Я согласен", callback_data="gdpr_accept")]
+            ])  # Добавлена закрывающая скобка
+        )
+        return Config.GDPR_CONSENT
 
     @staticmethod
     async def handle_gdpr_accept(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Обработка принятия GDPR-соглашения"""
         await update.callback_query.answer()
         await update.callback_query.edit_message_text("📱 Введите телефон в международном формате (+79991234567):")
         return Config.PHONE_INPUT
 
     @staticmethod
     async def handle_phone_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Валидация и сохранение номера телефона"""
         phone = update.message.text.strip()
         
         if not Security.validate_phone(phone):
             await update.message.reply_text("❌ Неверный формат! Пример: +79991234567")
             return Config.PHONE_INPUT
 
-        # Генерация OTP
         context.user_data['phone'] = phone
         context.user_data['otp_secret'] = pyotp.random_base32()
         otp_code = pyotp.TOTP(context.user_data['otp_secret']).now()
         
-        # В реальном приложении здесь должна быть отправка SMS
         await update.message.reply_text(f"🔐 Ваш код подтверждения: {otp_code}\nВведите его ниже:")
         return Config.OTP_VERIFICATION
 
     @staticmethod
     async def verify_otp(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Проверка одноразового пароля"""
         user_code = update.message.text.strip()
         stored_secret = context.user_data.get('otp_secret')
         
@@ -78,7 +56,6 @@ class RegistrationHandlers:
 
     @staticmethod
     async def handle_full_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Сохранение ФИО и запрос локации"""
         full_name = update.message.text.strip()
         if len(full_name.split()) < 2:
             await update.message.reply_text("❌ Введите имя и фамилию через пробел")
@@ -90,7 +67,6 @@ class RegistrationHandlers:
 
     @staticmethod
     async def handle_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Обработка геолокации/города"""
         try:
             if update.message.location:
                 lat = update.message.location.latitude
@@ -100,8 +76,7 @@ class RegistrationHandlers:
                 city = update.message.text
                 lat, lon = await Geocoder.get_coordinates(city)
 
-            # Сохраняем данные
-            await DatabaseManager.execute_query(
+            await DatabaseManager.execute(
                 '''INSERT INTO users 
                 (user_id, phone_hash, full_name, city, lat, lon)
                 VALUES (?, ?, ?, ?, ?, ?)''',
@@ -115,12 +90,11 @@ class RegistrationHandlers:
                 )
             )
 
-            await update.message.reply_text(
-                "🎉 Регистрация завершена!\n"
-                "Используйте /menu для доступа к функциям",
+            await update.message.reply_text(  # Исправлено здесь
+                "🎉 Регистрация завершена!\nИспользуйте /menu для доступа к функциям",
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("📋 Меню", callback_data="main_menu")]
-                )
+                ])  # Добавлена закрывающая скобка
             )
             return ConversationHandler.END
 
@@ -134,7 +108,6 @@ class RegistrationHandlers:
 
     @staticmethod
     def get_conversation_handler():
-        """Фабрика для регистрации обработчика в приложении"""
         return ConversationHandler(
             entry_points=[CommandHandler('start', RegistrationHandlers.start)],
             states={
