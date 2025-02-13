@@ -1,5 +1,12 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import (
+    ContextTypes,
+    ConversationHandler,
+    CommandHandler,
+    MessageHandler,
+    filters,
+    CallbackQueryHandler
+)
 from config import Config
 from database.core import DatabaseManager
 from utils.security import Security
@@ -15,9 +22,9 @@ class RegistrationHandlers:
         await update.message.reply_text(
             Config.GDPR_TEXT,
             parse_mode="HTML",
-            reply_markup=InlineKeyboardMarkup([  # Исправлено здесь
+            reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("✅ Я согласен", callback_data="gdpr_accept")]
-            ])  # Добавлена закрывающая скобка
+            ])
         )
         return Config.GDPR_CONSENT
 
@@ -90,11 +97,11 @@ class RegistrationHandlers:
                 )
             )
 
-            await update.message.reply_text(  # Исправлено здесь
+            await update.message.reply_text(
                 "🎉 Регистрация завершена!\nИспользуйте /menu для доступа к функциям",
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("📋 Меню", callback_data="main_menu")]
-                ])  # Добавлена закрывающая скобка
+                ])
             )
             return ConversationHandler.END
 
@@ -127,8 +134,6 @@ class RegistrationHandlers:
                     MessageHandler(filters.TEXT | filters.LOCATION, RegistrationHandlers.handle_city)
                 ]
             },
-            fallbacks=[
-                CommandHandler('cancel', lambda u,c: ConversationHandler.END)
-            ],
-            allow_reentry=True
+            fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
+            per_message=True
         )
