@@ -1,6 +1,5 @@
-from telegram.ext import CommandHandler 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, ConversationHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from config import Config
 from database.core import DatabaseManager
 from utils.security import Security
