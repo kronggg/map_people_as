@@ -1,7 +1,8 @@
+# database/core.py
 import aiosqlite
 from config import Config
 
-class Database:
+class DatabaseManager:  # Переименовываем класс
     @staticmethod
     async def execute(query: str, params: tuple = None):
         async with aiosqlite.connect(Config.DB_NAME) as db:
