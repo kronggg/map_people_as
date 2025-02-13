@@ -11,7 +11,7 @@ load_dotenv()
 
 class Config:
     # Telegram
-    TOKEN = os.getenv("TELEGRAM_TOKEN")
+    TOKEN = os.getenv("7750243870:AAE531z6WZ4LpFM_6eE4nmc-Meon57T7B9o")
     
     # Database
     DB_NAME = "gdpr_bot.db"
