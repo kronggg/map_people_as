@@ -17,7 +17,7 @@ def main():
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', RegistrationHandlers.start)],
         states={
-            # ... остальные состояния
+        
         },
         fallbacks=[]
     )
