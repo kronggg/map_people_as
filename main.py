@@ -5,6 +5,17 @@
 from config import Config
 from handlers import RegistrationHandlers
 from database import Database
+# ▼▼▼ Все импорты должны быть в начале файла ▼▼▼
+from handlers.connections import ConnectionHandlers
+from handlers.notifications import NotificationHandlers
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ConversationHandler,
+    MessageHandler,
+    filters,
+    CallbackQueryHandler
+)
 
 def main():
     # Инициализация приложения
@@ -13,23 +24,17 @@ def main():
     # Инициализация БД
     application.add_handler(CommandHandler('init_db', Database.init_db))
     
-    # Регистрация обработчиков
+    # Регистрация обработчиков регистрации
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', RegistrationHandlers.start)],
         states={
-        
+            # ... остальные состояния
         },
         fallbacks=[]
     )
     application.add_handler(conv_handler)
     
-    # Запуск бота
-    application.run_polling()
-    
-    # Добавляем импорт
-from handlers.connections import ConnectionHandlers
-
-    # Регистрируем обработчик связей
+    # ▼▼▼ Регистрация обработчика связей ДО запуска бота ▼▼▼
     connection_conv = ConversationHandler(
         entry_points=[CommandHandler('connect', ConnectionHandlers.init_connection)],
         states={
@@ -44,10 +49,7 @@ from handlers.connections import ConnectionHandlers
     )
     application.add_handler(connection_conv)
     
-    # Добавляем новый импорт
-from handlers.notifications import NotificationHandlers
-
-    # Регистрируем обработчик ответов
+    # Регистрация обработчика ответов
     application.add_handler(CallbackQueryHandler(
         NotificationHandlers.handle_connection_response,
         pattern=r"^(accept|reject)_\d+$"
@@ -64,6 +66,9 @@ from handlers.notifications import NotificationHandlers
         ConnectionHandlers.handle_connections_pagination,
         pattern=r"^conn_page_\d+$"
     ))
+    
+    # Запуск бота должен быть ПОСЛЕДНИМ ▼▼▼
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
