@@ -22,6 +22,7 @@ class ProfileMenu:
         user_id = update.effective_user.id
         user_data = await DatabaseManager.fetch_one(
             "SELECT * FROM users WHERE user_id = ?", (user_id,)
+        )
         
         text = (
             f"👤 *Ваш профиль*\n\n"
