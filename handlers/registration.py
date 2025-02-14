@@ -118,5 +118,5 @@ class RegistrationHandlers:
                 Config.CITY: [MessageHandler(filters.TEXT | filters.LOCATION, RegistrationHandlers.handle_city)]
             },
             fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-            # Убрано per_message=True, так как используются разные типы обработчиков
+            per_message=False  # Явно указываем режим обработки
         )
