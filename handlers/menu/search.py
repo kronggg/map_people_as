@@ -1,5 +1,5 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
 from config import Config
 from database.core import DatabaseManager
 from utils.localization import translate
@@ -10,14 +10,12 @@ logger = logging.getLogger(__name__)
 class SearchMenu:
     @staticmethod
     async def show_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Отображение поиска"""
-        await update.message.reply_text(translate("search_prompt", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
+        await update.callback_query.edit_message_text(translate("search_prompt", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
         return Config.SEARCH_FILTERS
 
     @staticmethod
     async def handle_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Обработка поискового запроса"""
-        query = update.message.text
+        query = update.callback_query.data
         results = await DatabaseManager.fetch(
             """SELECT * FROM users 
             WHERE city LIKE ? OR skills LIKE ? OR hobbies LIKE ?""",
@@ -25,7 +23,7 @@ class SearchMenu:
         )
         
         if not results:
-            await update.message.reply_text(translate("no_results", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
+            await update.callback_query.edit_message_text(translate("no_results", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
             return Config.SEARCH_RESULTS
 
         keyboard = [
@@ -33,7 +31,7 @@ class SearchMenu:
             for row in results
         ]
         
-        await update.message.reply_text(
+        await update.callback_query.edit_message_text(
             translate("search_results", context.user_data.get("language", Config.DEFAULT_LANGUAGE)),
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
@@ -41,17 +39,12 @@ class SearchMenu:
 
     @classmethod
     def get_conversation_handler(cls):
-        """Возвращает ConversationHandler для поиска"""
         return ConversationHandler(
-            entry_points=[CommandHandler('search', cls.show_search)],
+            entry_points=[CallbackQueryHandler(cls.show_search, pattern="^menu_search$")],  # Исправлено
             states={
-                Config.SEARCH_FILTERS: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, cls.handle_search)
-                ],
-                Config.SEARCH_RESULTS: [
-                    CallbackQueryHandler(cls.handle_search, pattern="^view_profile_")
-                ]
+                Config.SEARCH_FILTERS: [CallbackQueryHandler(cls.handle_search)],
+                Config.SEARCH_RESULTS: [CallbackQueryHandler(cls.handle_search, pattern="^view_profile_")]
             },
-            fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-            per_message=True  # Исправлено
+            fallbacks=[CallbackQueryHandler(lambda u,c: ConversationHandler.END, pattern="^cancel$")],
+            per_message=True
         )

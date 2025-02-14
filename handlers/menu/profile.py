@@ -1,5 +1,5 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
 from config import Config
 from database.core import DatabaseManager
 from utils.localization import translate
@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 class ProfileMenu:
     @staticmethod
     async def show_profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Отображение профиля"""
         user_id = update.effective_user.id
         user_data = await DatabaseManager.fetch_one("SELECT * FROM users WHERE user_id = ?", (user_id,))
         
@@ -33,14 +32,11 @@ class ProfileMenu:
 
     @classmethod
     def get_conversation_handler(cls):
-        """Возвращает ConversationHandler для редактирования профиля"""
         return ConversationHandler(
             entry_points=[CallbackQueryHandler(cls.show_profile, pattern="^menu_profile$")],
             states={
-                Config.PROFILE_EDITING: [
-                    CallbackQueryHandler(cls.show_profile)
-                ]
+                Config.PROFILE_EDITING: [CallbackQueryHandler(cls.show_profile)]
             },
-            fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-            per_message=True  # Исправлено
+            fallbacks=[CallbackQueryHandler(lambda u,c: ConversationHandler.END, pattern="^cancel$")],  # Исправлено
+            per_message=True
         )

@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 class RegistrationHandlers:
     @staticmethod
     async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Начало регистрации"""
         await update.message.reply_text(
             translate("GDPR_TEXT", context.user_data.get("language", Config.DEFAULT_LANGUAGE)),
             reply_markup=InlineKeyboardMarkup([
@@ -24,14 +23,12 @@ class RegistrationHandlers:
 
     @staticmethod
     async def handle_gdpr_accept(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Обработка принятия GDPR"""
         await update.callback_query.answer()
         await update.callback_query.edit_message_text(translate("enter_phone", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
         return Config.PHONE_INPUT
 
     @staticmethod
     async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Обработка ввода телефона"""
         phone = update.message.text
         if not Security.validate_phone(phone):
             await update.message.reply_text(translate("invalid_phone_format", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
@@ -46,7 +43,6 @@ class RegistrationHandlers:
 
     @staticmethod
     async def verify_otp(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Проверка OTP"""
         user_code = update.message.text.strip()
         stored_secret = context.user_data.get('otp_secret')
         
@@ -59,7 +55,6 @@ class RegistrationHandlers:
 
     @staticmethod
     async def handle_full_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Обработка ввода ФИО"""
         full_name = update.message.text.strip()
         if len(full_name.split()) < 2:
             await update.message.reply_text(translate("invalid_full_name", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
@@ -71,7 +66,6 @@ class RegistrationHandlers:
 
     @staticmethod
     async def handle_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Обработка ввода города"""
         try:
             if update.message.location:
                 lat = update.message.location.latitude
@@ -117,22 +111,12 @@ class RegistrationHandlers:
         return ConversationHandler(
             entry_points=[CommandHandler('start', RegistrationHandlers.start)],
             states={
-                Config.GDPR_CONSENT: [
-                    CallbackQueryHandler(RegistrationHandlers.handle_gdpr_accept)
-                ],
-                Config.PHONE_INPUT: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_phone)
-                ],
-                Config.OTP_VERIFICATION: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.verify_otp)
-                ],
-                Config.FULL_NAME: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_full_name)
-                ],
-                Config.CITY: [
-                    MessageHandler(filters.TEXT | filters.LOCATION, RegistrationHandlers.handle_city)
-                ]
+                Config.GDPR_CONSENT: [CallbackQueryHandler(RegistrationHandlers.handle_gdpr_accept)],
+                Config.PHONE_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_phone)],
+                Config.OTP_VERIFICATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.verify_otp)],
+                Config.FULL_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_full_name)],
+                Config.CITY: [MessageHandler(filters.TEXT | filters.LOCATION, RegistrationHandlers.handle_city)]
             },
             fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-            per_message=True  # Исправлено
+            # Убрано per_message=True, так как используются разные типы обработчиков
         )
