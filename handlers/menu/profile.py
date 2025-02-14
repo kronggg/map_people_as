@@ -22,7 +22,6 @@ class ProfileMenu:
         user_id = update.effective_user.id
         user_data = await DatabaseManager.fetch_one(
             "SELECT * FROM users WHERE user_id = ?", (user_id,)
-        )
         
         text = (
             f"👤 *Ваш профиль*\n\n"
@@ -71,7 +70,6 @@ class ProfileMenu:
         await DatabaseManager.execute(
             "UPDATE users SET full_name = ? WHERE user_id = ?",
             (new_name, update.effective_user.id)
-        )
         
         await update.message.reply_text("✅ Имя успешно обновлено!")
         return await MainMenu.show_main_menu(update, context)
@@ -120,5 +118,5 @@ class ProfileMenu:
                 ]
             },
             fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-            per_message=False  # Установлено в False
+            per_message=True
         )
