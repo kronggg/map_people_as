@@ -13,26 +13,28 @@ logger = logging.getLogger(__name__)
 class RegistrationHandlers:
     @staticmethod
     async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Начало регистрации с кнопкой меню"""
+        # Создаем клавиатуру с одной кнопкой
+        keyboard = [[KeyboardButton(translate("accept_button", Config.DEFAULT_LANGUAGE))]]
+        
         await update.message.reply_text(
-            translate("GDPR_TEXT", context.user_data.get("language", Config.DEFAULT_LANGUAGE)),
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton(translate("accept_button", context.user_data.get("language", Config.DEFAULT_LANGUAGE)), callback_data="gdpr_accept")]
-            ])
+            translate("GDPR_TEXT", Config.DEFAULT_LANGUAGE),
+            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
         return Config.GDPR_CONSENT
 
     @staticmethod
     async def handle_gdpr_accept(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.callback_query.answer()
-        await update.callback_query.edit_message_text(translate("enter_phone", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
+        """Обработка принятия GDPR через текстовую кнопку"""
+        if update.message.text != translate("accept_button", Config.DEFAULT_LANGUAGE):
+            await update.message.reply_text(translate("gdpr_error", Config.DEFAULT_LANGUAGE))
+            return Config.GDPR_CONSENT
+        
+        await update.message.reply_text(
+            translate("enter_phone", Config.DEFAULT_LANGUAGE),
+            reply_markup=ReplyKeyboardMarkup.remove_keyboard  # Убираем клавиатуру
+        )
         return Config.PHONE_INPUT
-
-    @staticmethod
-    async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        phone = update.message.text
-        if not Security.validate_phone(phone):
-            await update.message.reply_text(translate("invalid_phone_format", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
-            return Config.PHONE_INPUT
         
         context.user_data['phone'] = phone
         context.user_data['otp_secret'] = pyotp.random_base32()
