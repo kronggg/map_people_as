@@ -71,7 +71,6 @@ class ProfileMenu:
         await DatabaseManager.execute(
             "UPDATE users SET full_name = ? WHERE user_id = ?",
             (new_name, update.effective_user.id)
-        )  # Закрывающая скобка добавлена здесь
         
         await update.message.reply_text("✅ Имя успешно обновлено!")
         return await MainMenu.show_main_menu(update, context)
@@ -90,8 +89,7 @@ class ProfileMenu:
 
             await DatabaseManager.execute(
                 "UPDATE users SET city = ?, lat = ?, lon = ? WHERE user_id = ?",
-                (city, lat, lon, update.effective_user.id)
-            )  # Закрывающая скобка добавлена здесь
+                (city, lat, lon, update.effective_user.id))
             
             await update.message.reply_text("✅ Город успешно обновлен!")
             return await MainMenu.show_main_menu(update, context)
@@ -106,20 +104,20 @@ class ProfileMenu:
 
     @classmethod
     def get_conversation_handler(cls):
-    return ConversationHandler(
-        entry_points=[CallbackQueryHandler(cls.show_profile, pattern="^menu_profile$")],
-        states={
-            Config.PROFILE_EDITING: [
-                CallbackQueryHandler(cls.handle_profile_edit),
-                MessageHandler(filters.TEXT & ~filters.COMMAND, cls.update_name)
-            ],
-            Config.PROFILE_EDITING_NAME: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, cls.update_name)
-            ],
-            Config.PROFILE_EDITING_CITY: [
-                MessageHandler(filters.TEXT | filters.LOCATION, cls.update_city)
-            ]
-        },
-        fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-        per_message=False
+        return ConversationHandler(
+            entry_points=[CallbackQueryHandler(cls.show_profile, pattern="^menu_profile$")],
+            states={
+                Config.PROFILE_EDITING: [
+                    CallbackQueryHandler(cls.handle_profile_edit),
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, cls.update_name)
+                ],
+                Config.PROFILE_EDITING_NAME: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, cls.update_name)
+                ],
+                Config.PROFILE_EDITING_CITY: [
+                    MessageHandler(filters.TEXT | filters.LOCATION, cls.update_city)
+                ]
+            },
+            fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
+            per_message=False  # Установлено в False
         )
