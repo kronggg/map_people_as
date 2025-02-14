@@ -11,7 +11,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-async def init_database():
+async def init_database(app: Application):  # Добавляем аргумент
     try:
         await DatabaseManager.execute('''CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY,
@@ -37,8 +37,8 @@ def setup_handlers(app):
 
 def main():
     try:
-        app = Application.builder().token(Config.TOKEN).post_init(init_database).build()
-        setup_handlers(app)
+        app = Application.builder().token(Config.TOKEN).build()
+        app.add_handler(CommandHandler("start", RegistrationHandlers.start))  # Явная регистрация команды
         app.run_polling()
     except Exception as e:
         logger.critical(f"Application failed: {str(e)}")
