@@ -13,26 +13,35 @@ logger = logging.getLogger(__name__)
 class RegistrationHandlers:
     @staticmethod
     async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        keyboard = [[KeyboardButton(translate("accept_button", Config.DEFAULT_LANGUAGE))]]
-        await update.message.reply_text(
-            translate("GDPR_TEXT", Config.DEFAULT_LANGUAGE),
-            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        )
-        return Config.GDPR_CONSENT
+        try:
+            keyboard = [[KeyboardButton(translate("accept_button", Config.DEFAULT_LANGUAGE))]]
+            await update.message.reply_text(
+                translate("GDPR_TEXT", Config.DEFAULT_LANGUAGE),
+                reply_markup=ReplyKeyboardMarkup(
+                    keyboard, 
+                    resize_keyboard=True,
+                    one_time_keyboard=True
+                )
+            )
+            return Config.GDPR_CONSENT
+        except Exception as e:
+            logger.error(f"Start error: {str(e)}")
+            return ConversationHandler.END
 
     @staticmethod
     async def handle_gdpr_accept(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if update.message.text != translate("accept_button", Config.DEFAULT_LANGUAGE):
+        expected_text = translate("accept_button", Config.DEFAULT_LANGUAGE)
+        
+        if update.message.text != expected_text:
             await update.message.reply_text(translate("gdpr_error", Config.DEFAULT_LANGUAGE))
             return Config.GDPR_CONSENT
-        
+            
         await update.message.reply_text(
             translate("enter_phone", Config.DEFAULT_LANGUAGE),
             reply_markup=ReplyKeyboardMarkup.remove_keyboard
         )
         return Config.PHONE_INPUT
 
-    # Восстановленные методы
     @staticmethod
     async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         phone = update.message.text
@@ -98,7 +107,10 @@ class RegistrationHandlers:
 
             await update.message.reply_text(
                 translate("registration_complete", Config.DEFAULT_LANGUAGE),
-                reply_markup=ReplyKeyboardMarkup([[KeyboardButton("/menu")]], resize_keyboard=True)
+                reply_markup=ReplyKeyboardMarkup(
+                    [[KeyboardButton("/menu")]],
+                    resize_keyboard=True
+                )
             )
             return ConversationHandler.END
 
@@ -106,22 +118,22 @@ class RegistrationHandlers:
             await update.message.reply_text(translate("geocoding_error", Config.DEFAULT_LANGUAGE).format(error=str(e)))
             return Config.CITY
         except Exception as e:
-            logger.error(f"Ошибка сохранения: {e}")
+            logger.error(f"Database error: {str(e)}")
             await update.message.reply_text(translate("registration_error", Config.DEFAULT_LANGUAGE))
             return ConversationHandler.END
 
     @staticmethod
     def get_conversation_handler():
         return ConversationHandler(
-            entry_points=[CommandHandler('start', RegistrationHandlers.start)],
+            entry_points=[CommandHandler('start', start)],
             states={
                 Config.GDPR_CONSENT: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_gdpr_accept)
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gdpr_accept)
                 ],
-                Config.PHONE_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_phone)],
-                Config.OTP_VERIFICATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.verify_otp)],
-                Config.FULL_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_full_name)],
-                Config.CITY: [MessageHandler(filters.TEXT | filters.LOCATION, RegistrationHandlers.handle_city)]
+                Config.PHONE_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_phone)],
+                Config.OTP_VERIFICATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, verify_otp)],
+                Config.FULL_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_full_name)],
+                Config.CITY: [MessageHandler(filters.TEXT | filters.LOCATION, handle_city)]
             },
             fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
             per_message=False

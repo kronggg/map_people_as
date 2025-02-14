@@ -1,7 +1,6 @@
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters
 from config import Config
-from database.core import DatabaseManager
 from utils.localization import translate
 import logging
 
@@ -9,28 +8,35 @@ logger = logging.getLogger(__name__)
 
 class MainMenu:
     @staticmethod
-    async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user_count = await DatabaseManager.fetch_one("SELECT COUNT(*) FROM users")
-        text = translate("main_menu_text", context.user_data.get("language", Config.DEFAULT_LANGUAGE)).format(users=user_count[0])
-        
-        keyboard = [
-            [InlineKeyboardButton(translate("profile_button", context.user_data.get("language", Config.DEFAULT_LANGUAGE)), callback_data="menu_profile")],
-            [InlineKeyboardButton(translate("search_button", context.user_data.get("language", Config.DEFAULT_LANGUAGE)), callback_data="menu_search")]
-        ]
-        
-        await update.callback_query.edit_message_text(
-            text,
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-        return Config.MAIN_MENU
+    async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        try:
+            keyboard = [
+                [KeyboardButton("👤 Профиль"), KeyboardButton("🔍 Поиск")],
+                [KeyboardButton("⚙ Настройки")]
+            ]
+            
+            await update.message.reply_text(
+                "🏠 Главное меню",
+                reply_markup=ReplyKeyboardMarkup(
+                    keyboard,
+                    resize_keyboard=True,
+                    one_time_keyboard=False
+                )
+            )
+            return Config.MAIN_MENU
+        except Exception as e:
+            logger.error(f"Menu error: {str(e)}")
+            return ConversationHandler.END
 
     @classmethod
     def get_conversation_handler(cls):
         return ConversationHandler(
-            entry_points=[CallbackQueryHandler(cls.show_main_menu, pattern="^main_menu$")],
+            entry_points=[CommandHandler('menu', cls.show_menu)],
             states={
-                Config.MAIN_MENU: [CallbackQueryHandler(cls.show_main_menu)]
+                Config.MAIN_MENU: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, cls.show_menu)
+                ]
             },
-            fallbacks=[CallbackQueryHandler(lambda u,c: ConversationHandler.END, pattern="^cancel$")],
-            per_message=True
+            fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
+            per_message=False
         )
