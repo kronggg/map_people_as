@@ -247,31 +247,30 @@ class SearchMenu:
 
     @classmethod
     def get_conversation_handler(cls):
-        """Фабрика для регистрации обработчика"""
-        return ConversationHandler(
-            entry_points=[CallbackQueryHandler(cls.show_search, pattern="^menu_search$")],
-            states={
-                Config.SEARCH_FILTERS: [
-                    CallbackQueryHandler(cls.handle_location_search, pattern="^search_location$"),
-                    CallbackQueryHandler(cls.handle_skills_search, pattern="^search_skills$"),
-                    CallbackQueryHandler(MainMenu.show_main_menu, pattern="^main_menu$")
-                ],
-                Config.SEARCH_LOCATION_INPUT: [
-                    MessageHandler(filters.TEXT | filters.LOCATION, cls.process_search_input)
-                ],
-                Config.SEARCH_SKILLS_INPUT: [
-                    MessageHandler(filters.TEXT, cls.process_search_input)
-                ],
-                Config.SEARCH_RESULTS: [
-                    CallbackQueryHandler(cls.handle_pagination, pattern="^(prev_page|next_page)$"),
-                    CallbackQueryHandler(cls.view_profile, pattern="^view_profile_"),
-                    CallbackQueryHandler(MainMenu.show_main_menu, pattern="^main_menu$")
-                ],
-                Config.VIEW_PROFILE: [
-                    CallbackQueryHandler(cls._display_results_page, pattern="^back_to_results$"),
-                    CallbackQueryHandler(MainMenu.show_main_menu, pattern="^main_menu$")
-                ]
-            },
-            fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-            allow_reentry=True
+    return ConversationHandler(
+        entry_points=[CallbackQueryHandler(cls.show_search, pattern="^menu_search$")],
+        states={
+            Config.SEARCH_FILTERS: [
+                CallbackQueryHandler(cls.handle_location_search, pattern="^search_location$"),
+                CallbackQueryHandler(cls.handle_skills_search, pattern="^search_skills$"),
+                CallbackQueryHandler(MainMenu.show_main_menu, pattern="^main_menu$")
+            ],
+            Config.SEARCH_LOCATION_INPUT: [
+                MessageHandler(filters.TEXT | filters.LOCATION, cls.process_search_input)
+            ],
+            Config.SEARCH_SKILLS_INPUT: [
+                MessageHandler(filters.TEXT, cls.process_search_input)
+            ],
+            Config.SEARCH_RESULTS: [
+                CallbackQueryHandler(cls.handle_pagination, pattern="^(prev_page|next_page)$"),
+                CallbackQueryHandler(cls.view_profile, pattern="^view_profile_"),
+                CallbackQueryHandler(MainMenu.show_main_menu, pattern="^main_menu$")
+            ],
+            Config.VIEW_PROFILE: [
+                CallbackQueryHandler(cls._display_results_page, pattern="^back_to_results$"),
+                CallbackQueryHandler(MainMenu.show_main_menu, pattern="^main_menu$")
+            ]
+        },
+        fallbacks=[CallbackQueryHandler(lambda u,c: ConversationHandler.END, pattern="^cancel$")],  # Исправлено
+        per_message=False 
         )
