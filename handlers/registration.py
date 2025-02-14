@@ -13,12 +13,13 @@ logger = logging.getLogger(__name__)
 class RegistrationHandlers:
     @staticmethod
     async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Обработка команды /start"""
         try:
             keyboard = [[KeyboardButton(translate("accept_button", Config.DEFAULT_LANGUAGE))]]
             await update.message.reply_text(
                 translate("GDPR_TEXT", Config.DEFAULT_LANGUAGE),
                 reply_markup=ReplyKeyboardMarkup(
-                    keyboard, 
+                    keyboard,
                     resize_keyboard=True,
                     one_time_keyboard=True
                 )
@@ -140,11 +141,15 @@ class RegistrationHandlers:
 
     @staticmethod
     def get_conversation_handler():
+        """Фабрика обработчика"""
         return ConversationHandler(
             entry_points=[CommandHandler('start', RegistrationHandlers.start)],
             states={
                 Config.GDPR_CONSENT: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_gdpr_accept)
+                    MessageHandler(
+                        filters.TEXT & ~filters.COMMAND,
+                        RegistrationHandlers.handle_gdpr_accept
+                    )
                 ],
                 Config.PHONE_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_phone)],
                 Config.OTP_VERIFICATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.verify_otp)],
