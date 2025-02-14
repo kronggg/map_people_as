@@ -53,5 +53,5 @@ class SearchMenu:
                 ]
             },
             fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-            per_message=False
+            per_message=True  # Исправлено
         )

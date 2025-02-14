@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, Mess
 from config import Config
 from database.core import DatabaseManager
 from utils.security import Security
-from utils.geocoder import Geocoder, GeocodingError  # Теперь импорт работает
+from utils.geocoder import Geocoder, GeocodingError
 from utils.localization import translate
 import pyotp
 import logging
@@ -134,5 +134,5 @@ class RegistrationHandlers:
                 ]
             },
             fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-            per_message=False
+            per_message=True  # Исправлено
         )
