@@ -41,7 +41,7 @@ class RegistrationHandlers:
                 
             await update.message.reply_text(
                 translate("enter_phone", Config.DEFAULT_LANGUAGE),
-                reply_markup=ReplyKeyboardMarkup.remove_keyboard()
+                reply_markup=ReplyKeyboardRemove()
             )
             return Config.PHONE_INPUT  # Переход к следующему состоянию
             
