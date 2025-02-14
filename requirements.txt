@@ -3,5 +3,4 @@ cryptography
 folium
 pyotp
 requests
-sqlite3
 dotenv
