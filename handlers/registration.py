@@ -1,5 +1,5 @@
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters
 from config import Config
 from database.core import DatabaseManager
 from utils.security import Security
@@ -13,34 +13,38 @@ logger = logging.getLogger(__name__)
 class RegistrationHandlers:
     @staticmethod
     async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Начало регистрации с кнопкой меню"""
-        # Создаем клавиатуру с одной кнопкой
         keyboard = [[KeyboardButton(translate("accept_button", Config.DEFAULT_LANGUAGE))]]
-        
         await update.message.reply_text(
             translate("GDPR_TEXT", Config.DEFAULT_LANGUAGE),
-            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
+            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
         )
         return Config.GDPR_CONSENT
 
     @staticmethod
     async def handle_gdpr_accept(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Обработка принятия GDPR через текстовую кнопку"""
         if update.message.text != translate("accept_button", Config.DEFAULT_LANGUAGE):
             await update.message.reply_text(translate("gdpr_error", Config.DEFAULT_LANGUAGE))
             return Config.GDPR_CONSENT
         
         await update.message.reply_text(
             translate("enter_phone", Config.DEFAULT_LANGUAGE),
-            reply_markup=ReplyKeyboardMarkup.remove_keyboard  # Убираем клавиатуру
+            reply_markup=ReplyKeyboardMarkup.remove_keyboard
         )
         return Config.PHONE_INPUT
+
+    # Восстановленные методы
+    @staticmethod
+    async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        phone = update.message.text
+        if not Security.validate_phone(phone):
+            await update.message.reply_text(translate("invalid_phone_format", Config.DEFAULT_LANGUAGE))
+            return Config.PHONE_INPUT
         
         context.user_data['phone'] = phone
         context.user_data['otp_secret'] = pyotp.random_base32()
         otp_code = pyotp.TOTP(context.user_data['otp_secret']).now()
         
-        await update.message.reply_text(translate("enter_otp", context.user_data.get("language", Config.DEFAULT_LANGUAGE)).format(otp_code=otp_code))
+        await update.message.reply_text(translate("enter_otp", Config.DEFAULT_LANGUAGE).format(otp_code=otp_code))
         return Config.OTP_VERIFICATION
 
     @staticmethod
@@ -49,21 +53,21 @@ class RegistrationHandlers:
         stored_secret = context.user_data.get('otp_secret')
         
         if not pyotp.TOTP(stored_secret).verify(user_code):
-            await update.message.reply_text(translate("invalid_otp", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
+            await update.message.reply_text(translate("invalid_otp", Config.DEFAULT_LANGUAGE))
             return Config.OTP_VERIFICATION
 
-        await update.message.reply_text(translate("enter_full_name", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
+        await update.message.reply_text(translate("enter_full_name", Config.DEFAULT_LANGUAGE))
         return Config.FULL_NAME
 
     @staticmethod
     async def handle_full_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
         full_name = update.message.text.strip()
         if len(full_name.split()) < 2:
-            await update.message.reply_text(translate("invalid_full_name", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
+            await update.message.reply_text(translate("invalid_full_name", Config.DEFAULT_LANGUAGE))
             return Config.FULL_NAME
 
         context.user_data['full_name'] = full_name
-        await update.message.reply_text(translate("enter_city", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
+        await update.message.reply_text(translate("enter_city", Config.DEFAULT_LANGUAGE))
         return Config.CITY
 
     @staticmethod
@@ -88,24 +92,22 @@ class RegistrationHandlers:
                     city,
                     lat,
                     lon,
-                    context.user_data.get("language", Config.DEFAULT_LANGUAGE)
+                    Config.DEFAULT_LANGUAGE
                 )
             )
 
             await update.message.reply_text(
-                translate("registration_complete", context.user_data.get("language", Config.DEFAULT_LANGUAGE)),
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton(translate("main_menu_button", context.user_data.get("language", Config.DEFAULT_LANGUAGE)), callback_data="main_menu")]
-                ])
+                translate("registration_complete", Config.DEFAULT_LANGUAGE),
+                reply_markup=ReplyKeyboardMarkup([[KeyboardButton("/menu")]], resize_keyboard=True)
             )
             return ConversationHandler.END
 
         except GeocodingError as e:
-            await update.message.reply_text(translate("geocoding_error", context.user_data.get("language", Config.DEFAULT_LANGUAGE)).format(error=str(e)))
+            await update.message.reply_text(translate("geocoding_error", Config.DEFAULT_LANGUAGE).format(error=str(e)))
             return Config.CITY
         except Exception as e:
             logger.error(f"Ошибка сохранения: {e}")
-            await update.message.reply_text(translate("registration_error", context.user_data.get("language", Config.DEFAULT_LANGUAGE)))
+            await update.message.reply_text(translate("registration_error", Config.DEFAULT_LANGUAGE))
             return ConversationHandler.END
 
     @staticmethod
@@ -114,10 +116,7 @@ class RegistrationHandlers:
             entry_points=[CommandHandler('start', RegistrationHandlers.start)],
             states={
                 Config.GDPR_CONSENT: [
-                    CallbackQueryHandler(
-                        RegistrationHandlers.handle_gdpr_accept,
-                        pattern="^gdpr_accept$"  # Добавляем явный паттерн
-                    )
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_gdpr_accept)
                 ],
                 Config.PHONE_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_phone)],
                 Config.OTP_VERIFICATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.verify_otp)],
@@ -125,6 +124,5 @@ class RegistrationHandlers:
                 Config.CITY: [MessageHandler(filters.TEXT | filters.LOCATION, RegistrationHandlers.handle_city)]
             },
             fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-            per_message=False,  # Явно указываем режим
-            allow_reentry=True  # Разрешаем повторный вход
+            per_message=False
         )
