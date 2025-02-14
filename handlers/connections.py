@@ -155,7 +155,7 @@ class ConnectionHandlers:
 
     @staticmethod
     def get_conversation_handler(cls):
-    return ConversationHandler(
+        return ConversationHandler(
         entry_points=[CommandHandler('connect', cls.init_connection)],
         states={
             Config.SEARCH_QUERY: [
