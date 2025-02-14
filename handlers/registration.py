@@ -111,12 +111,18 @@ class RegistrationHandlers:
         return ConversationHandler(
             entry_points=[CommandHandler('start', RegistrationHandlers.start)],
             states={
-                Config.GDPR_CONSENT: [CallbackQueryHandler(RegistrationHandlers.handle_gdpr_accept)],
+                Config.GDPR_CONSENT: [
+                    CallbackQueryHandler(
+                        RegistrationHandlers.handle_gdpr_accept,
+                        pattern="^gdpr_accept$"  # Добавляем явный паттерн
+                    )
+                ],
                 Config.PHONE_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_phone)],
                 Config.OTP_VERIFICATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.verify_otp)],
                 Config.FULL_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_full_name)],
                 Config.CITY: [MessageHandler(filters.TEXT | filters.LOCATION, RegistrationHandlers.handle_city)]
             },
             fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-            per_message=False  # Явно указываем режим обработки
+            per_message=False,  # Явно указываем режим
+            allow_reentry=True  # Разрешаем повторный вход
         )
