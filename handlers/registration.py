@@ -31,8 +31,10 @@ class RegistrationHandlers:
 
     @staticmethod
     async def handle_gdpr_accept(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Обработка принятия GDPR"""
         try:
             expected_text = translate("accept_button", Config.DEFAULT_LANGUAGE)
+            
             if update.message.text != expected_text:
                 await update.message.reply_text(translate("gdpr_error", Config.DEFAULT_LANGUAGE))
                 return Config.GDPR_CONSENT
@@ -41,13 +43,15 @@ class RegistrationHandlers:
                 translate("enter_phone", Config.DEFAULT_LANGUAGE),
                 reply_markup=ReplyKeyboardMarkup.remove_keyboard()
             )
-            return Config.PHONE_INPUT
+            return Config.PHONE_INPUT  # Переход к следующему состоянию
+            
         except Exception as e:
             logger.error(f"GDPR accept error: {str(e)}")
             return ConversationHandler.END
 
     @staticmethod
     async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Обработка ввода телефона"""
         try:
             phone = update.message.text
             if not Security.validate_phone(phone):
@@ -61,7 +65,8 @@ class RegistrationHandlers:
             await update.message.reply_text(
                 translate("enter_otp", Config.DEFAULT_LANGUAGE).format(otp_code=otp_code)
             )
-            return Config.OTP_VERIFICATION
+            return Config.OTP_VERIFICATION  # Переход к верификации
+            
         except Exception as e:
             logger.error(f"Phone handling error: {str(e)}")
             return ConversationHandler.END
