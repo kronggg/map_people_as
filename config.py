@@ -12,7 +12,7 @@ class Config:
     DB_NAME = os.getenv("DB_NAME", "users.db")
     
     # Security
-    CIPHER_KEY = Fernet.generate_key()
+    CIPHER_KEY = Fernet.generate_key()  # Генерация ключа шифрования
     OTP_TIMEOUT = 300  # 5 минут
     
     # Localization
