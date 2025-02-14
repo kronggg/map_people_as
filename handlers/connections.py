@@ -6,6 +6,7 @@ from telegram import (
     ShippingOption
 )
 from telegram.ext import (
+    ConversationHandler,
     ContextTypes, 
     CallbackQueryHandler, 
     MessageHandler, 
@@ -153,21 +154,20 @@ class ConnectionHandlers:
         return ConversationHandler.END
 
     @staticmethod
-    def get_conversation_handler():
-        """Возвращает настроенный ConversationHandler"""
-        return ConversationHandler(
-            entry_points=[CommandHandler('connect', ConnectionHandlers.init_connection)],
-            states={
-                Config.SEARCH_QUERY: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, ConnectionHandlers.handle_search)
-                ],
-                Config.CONNECTION_SELECT: [
-                    CallbackQueryHandler(ConnectionHandlers.handle_selection, pattern=r"^conn_select_\d+$")
-                ]
-            },
-            fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-            allow_reentry=True
-        )
+    def get_conversation_handler(cls):
+    return ConversationHandler(
+        entry_points=[CommandHandler('connect', cls.init_connection)],
+        states={
+            Config.SEARCH_QUERY: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, cls.handle_search)
+            ],
+            Config.CONNECTION_SELECT: [
+                CallbackQueryHandler(cls.handle_selection, pattern=r"^conn_select_\d+$")
+            ]
+        },
+        fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
+        per_message=False
+    )
 
     @staticmethod
     def get_callbacks():
