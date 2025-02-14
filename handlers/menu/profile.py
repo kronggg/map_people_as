@@ -71,6 +71,7 @@ class ProfileMenu:
         await DatabaseManager.execute(
             "UPDATE users SET full_name = ? WHERE user_id = ?",
             (new_name, update.effective_user.id)
+        )
         
         await update.message.reply_text("✅ Имя успешно обновлено!")
         return await MainMenu.show_main_menu(update, context)
