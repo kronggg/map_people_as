@@ -2,8 +2,10 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from config import Config
 from database.core import DatabaseManager
-from utils.geocoder import Geocoder, GeocodingError
 from utils.localization import translate
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SearchMenu:
     @staticmethod
@@ -36,3 +38,20 @@ class SearchMenu:
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
         return Config.SEARCH_RESULTS
+
+    @classmethod
+    def get_conversation_handler(cls):
+        """Возвращает ConversationHandler для поиска"""
+        return ConversationHandler(
+            entry_points=[CommandHandler('search', cls.show_search)],
+            states={
+                Config.SEARCH_FILTERS: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, cls.handle_search)
+                ],
+                Config.SEARCH_RESULTS: [
+                    CallbackQueryHandler(cls.handle_search, pattern="^view_profile_")
+                ]
+            },
+            fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
+            per_message=False
+        )

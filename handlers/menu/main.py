@@ -1,8 +1,11 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, CallbackQueryHandler
+from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, CallbackQueryHandler
 from config import Config
 from database.core import DatabaseManager
 from utils.localization import translate
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MainMenu:
     @staticmethod
@@ -21,3 +24,17 @@ class MainMenu:
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
         return Config.MAIN_MENU
+
+    @classmethod
+    def get_conversation_handler(cls):
+        """Возвращает ConversationHandler для главного меню"""
+        return ConversationHandler(
+            entry_points=[CallbackQueryHandler(cls.show_main_menu, pattern="^main_menu$")],
+            states={
+                Config.MAIN_MENU: [
+                    CallbackQueryHandler(cls.show_main_menu)
+                ]
+            },
+            fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
+            per_message=False
+        )
