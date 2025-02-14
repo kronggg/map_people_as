@@ -1,6 +1,7 @@
-python-telegram-bot==20.0
-cryptography
-folium
-pyotp
-requests
-dotenv
+python-telegram-bot==20.3
+aiosqlite==0.19.0
+redis==4.5.5
+python-dotenv==1.0.0
+phonenumbers==8.13.22
+pyotp==2.8.0
+aiohttp==3.9.3
