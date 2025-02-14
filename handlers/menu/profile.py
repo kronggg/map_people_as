@@ -71,6 +71,7 @@ class ProfileMenu:
         await DatabaseManager.execute(
             "UPDATE users SET full_name = ? WHERE user_id = ?",
             (new_name, update.effective_user.id)
+        )  # Закрывающая скобка добавлена здесь
         
         await update.message.reply_text("✅ Имя успешно обновлено!")
         return await MainMenu.show_main_menu(update, context)
@@ -89,7 +90,8 @@ class ProfileMenu:
 
             await DatabaseManager.execute(
                 "UPDATE users SET city = ?, lat = ?, lon = ? WHERE user_id = ?",
-                (city, lat, lon, update.effective_user.id))
+                (city, lat, lon, update.effective_user.id)
+            )  # Закрывающая скобка добавлена здесь
             
             await update.message.reply_text("✅ Город успешно обновлен!")
             return await MainMenu.show_main_menu(update, context)
