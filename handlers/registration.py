@@ -115,25 +115,25 @@ class RegistrationHandlers:
 
     @staticmethod
     def get_conversation_handler():
-    return ConversationHandler(
-        entry_points=[CommandHandler('start', RegistrationHandlers.start)],
-        states={
-            Config.GDPR_CONSENT: [
-                CallbackQueryHandler(RegistrationHandlers.handle_gdpr_accept)
-            ],
-            Config.PHONE_INPUT: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_phone_input)
-            ],
-            Config.OTP_VERIFICATION: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.verify_otp)
-            ],
-            Config.FULL_NAME: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_full_name)
-            ],
-            Config.CITY: [
-                MessageHandler(filters.TEXT | filters.LOCATION, RegistrationHandlers.handle_city)
-            ]
-        },
-        fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
-        per_message=False
+        return ConversationHandler(
+            entry_points=[CommandHandler('start', RegistrationHandlers.start)],
+            states={
+                Config.GDPR_CONSENT: [
+                    CallbackQueryHandler(RegistrationHandlers.handle_gdpr_accept)
+                ],
+                Config.PHONE_INPUT: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_phone_input)
+                ],
+                Config.OTP_VERIFICATION: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.verify_otp)
+                ],
+                Config.FULL_NAME: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, RegistrationHandlers.handle_full_name)
+                ],
+                Config.CITY: [
+                    MessageHandler(filters.TEXT | filters.LOCATION, RegistrationHandlers.handle_city)
+                ]
+            },
+            fallbacks=[CommandHandler('cancel', lambda u,c: ConversationHandler.END)],
+            per_message=False  # Установлено в False
         )
