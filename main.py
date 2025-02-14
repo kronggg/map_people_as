@@ -12,15 +12,36 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 async def init_database():
-    await DatabaseManager.execute('''CREATE TABLE IF NOT EXISTS users (...)''')
+    try:
+        await DatabaseManager.execute('''CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY,
+            phone_hash TEXT UNIQUE,
+            full_name TEXT NOT NULL,
+            city TEXT,
+            lat REAL,
+            lon REAL,
+            language TEXT DEFAULT 'ru',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )''')
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {str(e)}")
 
 def setup_handlers(app):
-    app.add_handler(RegistrationHandlers.get_conversation_handler())
-    app.add_handler(MainMenu.get_conversation_handler())
+    try:
+        app.add_handler(RegistrationHandlers.get_conversation_handler())
+        app.add_handler(MainMenu.get_conversation_handler())
+        logger.info("Handlers registered successfully")
+    except Exception as e:
+        logger.error(f"Handler setup failed: {str(e)}")
 
 def main():
-    app = Application.builder().token(Config.TOKEN).build()
-    app.run_polling()
+    try:
+        app = Application.builder().token(Config.TOKEN).post_init(init_database).build()
+        setup_handlers(app)
+        app.run_polling()
+    except Exception as e:
+        logger.critical(f"Application failed: {str(e)}")
 
 if __name__ == "__main__":
     main()
