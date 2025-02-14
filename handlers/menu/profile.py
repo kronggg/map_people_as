@@ -37,6 +37,6 @@ class ProfileMenu:
             states={
                 Config.PROFILE_EDITING: [CallbackQueryHandler(cls.show_profile)]
             },
-            fallbacks=[CallbackQueryHandler(lambda u,c: ConversationHandler.END, pattern="^cancel$")],  # Исправлено
+            fallbacks=[CallbackQueryHandler(lambda u,c: ConversationHandler.END, pattern="^cancel$")],
             per_message=True
         )

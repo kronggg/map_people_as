@@ -40,7 +40,7 @@ class SearchMenu:
     @classmethod
     def get_conversation_handler(cls):
         return ConversationHandler(
-            entry_points=[CallbackQueryHandler(cls.show_search, pattern="^menu_search$")],  # Исправлено
+            entry_points=[CallbackQueryHandler(cls.show_search, pattern="^menu_search$")],
             states={
                 Config.SEARCH_FILTERS: [CallbackQueryHandler(cls.handle_search)],
                 Config.SEARCH_RESULTS: [CallbackQueryHandler(cls.handle_search, pattern="^view_profile_")]

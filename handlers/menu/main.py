@@ -31,6 +31,6 @@ class MainMenu:
             states={
                 Config.MAIN_MENU: [CallbackQueryHandler(cls.show_main_menu)]
             },
-            fallbacks=[CallbackQueryHandler(lambda u,c: ConversationHandler.END, pattern="^cancel$")],  # Исправлено
+            fallbacks=[CallbackQueryHandler(lambda u,c: ConversationHandler.END, pattern="^cancel$")],
             per_message=True
         )

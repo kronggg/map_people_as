@@ -42,7 +42,6 @@ def setup_handlers(app):
     app.add_handler(MainMenu.get_conversation_handler())
     app.add_handler(ProfileMenu.get_conversation_handler())
     app.add_handler(SearchMenu.get_conversation_handler())
-    # Удалён ошибочный вызов ConnectionHandlers
 
 def main():
     app = Application.builder().token(Config.TOKEN).build()
