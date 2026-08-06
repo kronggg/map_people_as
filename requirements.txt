@@ -5,4 +5,4 @@ python-dotenv==1.0.0
 phonenumbers==8.13.22
 pyotp==2.8.0
 aiohttp==3.9.3
-cryptography==48.0.1  # Добавлено
+cryptography==50.0.0  # Добавлено
